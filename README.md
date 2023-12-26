@@ -223,3 +223,17 @@ In the Secrets tab, you can click on Edit as JSON button and paste the following
 ![Create a new Slack app](doc/images/slack/slack-try-app.png)
 
 ![Create a new Slack app](doc/images/slack/slack-bot.png)
+
+
+## ENV 
+
+create file `env.sh` and apply with `$ source env.sh`
+
+```
+export SLACK_SIGNING_SECRET=""
+export SLACK_APP_TOKEN="xapp-xxx"
+export SLACK_BOT_TOKEN="xoxb-xxx"
+export VOICEFLOW_VERSION_ID=""
+export VOICEFLOW_PROJECT_ID=""
+export VOICEFLOW_API_KEY="VF.DM.6xxxx"
+```

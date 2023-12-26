@@ -7,14 +7,14 @@ import axios from 'axios'
 import { Text } from 'slate'
 import escapeHtml from 'escape-html'
 
-const versionID = process.env.VOICEFLOW_VERSION_ID || 'production'
-const projectID = process.env.VOICEFLOW_PROJECT_ID || null
-let session = `${versionID}.${createSession()}`
-const VOICEFLOW_API_KEY = process.env.VOICEFLOW_API_KEY
-const VOICEFLOW_RUNTIME_ENDPOINT = process.env.VOICEFLOW_RUNTIME_ENDPOINT || 'general-runtime.voiceflow.com'
-const SLACK_APP_TOKEN = process.env.SLACK_APP_TOKEN
-const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN
-const SLACK_SIGNING_SECRET = process.env.SLACK_SIGNING_SECRET
+const versionID = process.env.VOICEFLOW_VERSION_ID || 'production';
+const projectID = process.env.VOICEFLOW_PROJECT_ID || null;
+let session = `${versionID}.${createSession()}`;
+const VOICEFLOW_API_KEY = process.env.VOICEFLOW_API_KEY;
+const VOICEFLOW_RUNTIME_ENDPOINT = process.env.VOICEFLOW_RUNTIME_ENDPOINT || 'general-runtime.voiceflow.com';
+const SLACK_APP_TOKEN = process.env.SLACK_APP_TOKEN;
+const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN;
+const SLACK_SIGNING_SECRET = process.env.SLACK_SIGNING_SECRET;
 
 let noreply
 let isError = false;
@@ -26,7 +26,7 @@ const app = new App({
   token: SLACK_BOT_TOKEN,
   socketMode: true,
   appToken: SLACK_APP_TOKEN,
-})
+});
 
 // Slack app_mention event
 app.event('app_mention', async ({ event, client, say }) => {
@@ -34,43 +34,43 @@ app.event('app_mention', async ({ event, client, say }) => {
 
     let i = await client.users.info({
       user: event.user,
-    })
+    });
 
-    let userName = i.user.profile.real_name_normalized
+    let userName = i.user.profile.real_name_normalized;
 
-    await say(`Hi ${userName}`)
-    let utterance = event.text.split('>')[1]
-    utterance = stripEmojis(utterance)
-    utterance = cleanEmail(utterance)
+    await say(`Hi ${userName}`);
+    let utterance = event.text.split('>')[1];
+    utterance = stripEmojis(utterance);
+    utterance = cleanEmail(utterance);
     if (utterance === 'hi' || utterance === 'hi there') {
       await interact(event.user, say, client, {
         type: 'launch',
-      })
+      });
     } else {
       await interact(event.user, say, client, {
         type: 'text',
         payload: utterance,
-      })
+      });
     }
   } catch (error) {
-    console.error(error)
+    console.error(error);
   }
 })
 
 // Listen for users opening your App Home
 app.event('app_home_opened', async ({ event, client }) => {
   Home.show(client, event)
-})
+});
 
 app.action(CHIP_ACTION_REGEX, async ({ action, say, ack, client }) => {
   ack()
-  if (action.type !== 'button') return
+  if (action.type !== 'button') return;
   // get the user id from the action id
-  let userID = action.action_id.split(':')[2]
-  let path = action.action_id.split(':')[1]
+  let userID = action.action_id.split(':')[2];
+  let path = action.action_id.split(':')[1];
   await client.users.info({
     user: userID,
-  })
+  });
 
   if (path.includes('path-')) {
     await interact(userID, say, client, {
@@ -78,7 +78,7 @@ app.action(CHIP_ACTION_REGEX, async ({ action, say, ack, client }) => {
       payload: {
         label: action.value,
       },
-    })
+    });
   } else {
     await interact(userID, say, client, {
       type: 'intent',
@@ -90,9 +90,9 @@ app.action(CHIP_ACTION_REGEX, async ({ action, say, ack, client }) => {
         },
         entities: [],
       },
-    })
+    });
   }
-})
+});
 
 app.message(ANY_WORD_REGEX, async ({ message, say, client }) => {
   // Ignoring some message types
@@ -101,31 +101,31 @@ app.message(ANY_WORD_REGEX, async ({ message, say, client }) => {
     message.subtype === 'message_deleted' ||
     message.subtype === 'message_replied'
   )
-    return
+    return;
 
   // Cleaning user's utterance from Slack
-  let utterance = stripEmojis(message.text)
+  let utterance = stripEmojis(message.text);
   // Formating Slack email format from <mailto:name@email.com|name@email.com> to name@email.com
-  utterance = cleanEmail(utterance)
+  utterance = cleanEmail(utterance);
 
-  console.log('Utterance:', utterance)
+  console.log('Utterance:', utterance);
 
   if (utterance === 'hi' || utterance === 'hi there') {
     await interact(message.user, say, client, {
       type: 'launch',
-    })
+    });
   } else {
     await interact(message.user, say, client, {
       type: 'text',
       payload: utterance,
-    })
+    });
   }
-})
-  ; (async () => {
+});
+  (async () => {
     // Start the app
-    await app.start()
+    await app.start(8080)
     console.log(`⚡️ Bolt app is running!`)
-  })()
+  })();
 
 // Interact with Voiceflow | Dialog Manager API
 async function interact(userID, say, client, request) {
@@ -374,7 +374,7 @@ async function interact(userID, say, client, request) {
     return false;
   }
   return true;
-}
+};
 
 async function saveTranscript(username, userpix) {
   if (projectID) {
@@ -413,4 +413,4 @@ async function saveTranscript(username, userpix) {
       })
       .catch((err) => console.log(err));
   }
-}
+};
