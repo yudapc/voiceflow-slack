@@ -1,11 +1,19 @@
 /* eslint-disable no-await-in-loop */
-import slack_pkg from '@slack/bolt'
-const { App } = slack_pkg
-import { createSession, cleanEmail, stripEmojis, stripBackSlashs, cleanText, CHIP_ACTION_REGEX, ANY_WORD_REGEX } from './components/utils.js'
-import * as Home from './components/home.js'
-import axios from 'axios'
-import { Text } from 'slate'
-import escapeHtml from 'escape-html'
+import slack_pkg from '@slack/bolt';
+const { App } = slack_pkg;
+import {
+  createSession,
+  cleanEmail,
+  stripEmojis,
+  stripBackSlashs,
+  cleanText,
+  CHIP_ACTION_REGEX,
+  ANY_WORD_REGEX
+} from './components/utils.js';
+import * as Home from './components/home.js';
+import axios from 'axios';
+import { Text } from 'slate';
+import escapeHtml from 'escape-html';
 
 const versionID = process.env.VOICEFLOW_VERSION_ID || 'production';
 const projectID = process.env.VOICEFLOW_PROJECT_ID || null;
@@ -16,7 +24,7 @@ const SLACK_APP_TOKEN = process.env.SLACK_APP_TOKEN;
 const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN;
 const SLACK_SIGNING_SECRET = process.env.SLACK_SIGNING_SECRET;
 
-let noreply
+let noreply;
 let isError = false;
 let errorMessage = '';
 
@@ -29,9 +37,12 @@ const app = new App({
 });
 
 // Slack app_mention event
-app.event('app_mention', async ({ event, client, say }) => {
+app.event('app_mention', async ({
+  event,
+  client,
+  say
+}) => {
   try {
-
     let i = await client.users.info({
       user: event.user,
     });
@@ -55,14 +66,22 @@ app.event('app_mention', async ({ event, client, say }) => {
   } catch (error) {
     console.error(error);
   }
-})
+});
 
 // Listen for users opening your App Home
-app.event('app_home_opened', async ({ event, client }) => {
+app.event('app_home_opened', async ({
+  event,
+  client
+}) => {
   Home.show(client, event)
 });
 
-app.action(CHIP_ACTION_REGEX, async ({ action, say, ack, client }) => {
+app.action(CHIP_ACTION_REGEX, async ({
+  action,
+  say,
+  ack,
+  client
+}) => {
   ack()
   if (action.type !== 'button') return;
   // get the user id from the action id
@@ -94,7 +113,11 @@ app.action(CHIP_ACTION_REGEX, async ({ action, say, ack, client }) => {
   }
 });
 
-app.message(ANY_WORD_REGEX, async ({ message, say, client }) => {
+app.message(ANY_WORD_REGEX, async ({
+  message,
+  say,
+  client
+}) => {
   // Ignoring some message types
   if (
     message.subtype === 'message_changed' ||
@@ -121,11 +144,11 @@ app.message(ANY_WORD_REGEX, async ({ message, say, client }) => {
     });
   }
 });
-  (async () => {
-    // Start the app
-    await app.start(8080)
-    console.log(`⚡️ Bolt app is running!`)
-  })();
+(async () => {
+  // Start the app
+  await app.start(8080)
+  console.log(`⚡️ Bolt app is running on port 8080`)
+})();
 
 // Interact with Voiceflow | Dialog Manager API
 async function interact(userID, say, client, request) {
@@ -141,7 +164,11 @@ async function interact(userID, say, client, request) {
     const response = await axios({
       method: 'POST',
       url: `https://${VOICEFLOW_RUNTIME_ENDPOINT}/state/${versionID}/user/${userID}/interact`,
-      headers: { Authorization: VOICEFLOW_API_KEY, 'Content-Type': 'application/json', sessionid: session },
+      headers: {
+        Authorization: VOICEFLOW_API_KEY,
+        'Content-Type': 'application/json',
+        sessionid: session
+      },
       data: {
         request,
         config: {
@@ -198,15 +225,13 @@ async function interact(userID, say, client, request) {
               try {
                 await say({
                   text: 'Voiceflow Bot',
-                  blocks: [
-                    {
-                      type: 'section',
-                      text: {
-                        type: 'mrkdwn',
-                        text: cleanText(stripBackSlashs(renderedMessage)),
-                      },
+                  blocks: [{
+                    type: 'section',
+                    text: {
+                      type: 'mrkdwn',
+                      text: cleanText(stripBackSlashs(renderedMessage)),
                     },
-                  ],
+                  }, ],
                 });
               } catch (error) {
                 // Avoid breaking the Bot by ignoring then content if not supported
@@ -222,7 +247,13 @@ async function interact(userID, say, client, request) {
             } else {
               await say({
                 text: 'Voiceflow Bot',
-                blocks: [{ type: 'section', text: { type: 'mrkdwn', text: stripBackSlashs(trace.payload.message) } }],
+                blocks: [{
+                  type: 'section',
+                  text: {
+                    type: 'mrkdwn',
+                    text: stripBackSlashs(trace.payload.message)
+                  }
+                }],
               });
             }
             break;
@@ -232,13 +263,11 @@ async function interact(userID, say, client, request) {
               try {
                 await say({
                   text: 'Voiceflow Bot',
-                  blocks: [
-                    {
-                      type: 'image',
-                      image_url: trace.payload.image,
-                      alt_text: 'image',
-                    },
-                  ],
+                  blocks: [{
+                    type: 'image',
+                    image_url: trace.payload.image,
+                    alt_text: 'image',
+                  }],
                 });
               } catch (error) {
                 // Avoid breaking the Bot by ignoring then content if not supported
@@ -255,7 +284,10 @@ async function interact(userID, say, client, request) {
               let btId;
               let filteredButtons = buttons
                 .filter((buttons) => buttons.name != 'null' && buttons.name != null)
-                .map(({ name, request }) => {
+                .map(({
+                  name,
+                  request
+                }) => {
                   // Handle URL action
                   if (Object.keys(request.payload).includes('actions')) {
                     console.log(request.payload);
@@ -301,12 +333,10 @@ async function interact(userID, say, client, request) {
                 });
               await say({
                 text: 'Voiceflow Bot',
-                blocks: [
-                  {
-                    type: 'actions',
-                    elements: filteredButtons,
-                  },
-                ],
+                blocks: [{
+                  type: 'actions',
+                  elements: filteredButtons,
+                }, ],
               });
             }
             break;
@@ -337,15 +367,13 @@ async function interact(userID, say, client, request) {
       try {
         await say({
           text: 'Voiceflow Bot',
-          blocks: [
-            {
-              type: 'section',
-              text: {
-                type: 'mrkdwn',
-                text: cleanText(stripBackSlashs('Error with DM API. Please try again a bit later')),
-              },
+          blocks: [{
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: cleanText(stripBackSlashs('Error with DM API. Please try again a bit later')),
             },
-          ],
+          }, ],
         });
       } catch (error) {
         // Avoid breaking the Bot by ignoring then content if not supported
@@ -357,15 +385,13 @@ async function interact(userID, say, client, request) {
     try {
       await say({
         text: 'Voiceflow Bot',
-        blocks: [
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: cleanText(stripBackSlashs('Error. Please try again a bit later')),
-            },
+        blocks: [{
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: cleanText(stripBackSlashs('Error. Please try again a bit later')),
           },
-        ],
+        }, ],
       });
     } catch (error) {
       // Avoid breaking the Bot by ignoring then content if not supported
@@ -384,27 +410,27 @@ async function saveTranscript(username, userpix) {
       userpix = 'https://avatars.slack-edge.com/2021-03-20/1879385687829_370801c602af840e43f8_192.png';
     }
     axios({
-      method: 'put',
-      url: 'https://api.voiceflow.com/v2/transcripts',
-      data: {
-        browser: 'Slack',
-        device: 'desktop',
-        os: 'macOS',
-        sessionID: session,
-        unread: true,
-        versionID: versionID,
-        projectID: projectID,
-        notes: errorMessage == '' ? '' : errorMessage,
-        reportTags: isError == true ? ['system.saved'] : [],
-        user: {
-          name: username,
-          image: userpix,
+        method: 'put',
+        url: 'https://api.voiceflow.com/v2/transcripts',
+        data: {
+          browser: 'Slack',
+          device: 'desktop',
+          os: 'macOS',
+          sessionID: session,
+          unread: true,
+          versionID: versionID,
+          projectID: projectID,
+          notes: errorMessage == '' ? '' : errorMessage,
+          reportTags: isError == true ? ['system.saved'] : [],
+          user: {
+            name: username,
+            image: userpix,
+          },
         },
-      },
-      headers: {
-        Authorization: VOICEFLOW_API_KEY,
-      },
-    })
+        headers: {
+          Authorization: VOICEFLOW_API_KEY,
+        },
+      })
       .then(function(response) {
         console.log('Saved!');
         isError = false;
